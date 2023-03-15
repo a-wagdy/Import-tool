@@ -3,15 +3,20 @@
 namespace App\Http\Controllers\API;
 
 use App\Models\Employee;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use App\Http\Resources\EmployeeResource;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\LazyCollection;
+use App\Http\Resources\EmployeeResource;
 
 class EmployeeController extends APIController
 {
     /**
      * Display a listing of the resource.
+     *
+     * @return AnonymousResourceCollection
      */
     public function list(): \Illuminate\Http\Resources\Json\AnonymousResourceCollection
     {
@@ -20,22 +25,19 @@ class EmployeeController extends APIController
 
     /**
      * Show the form for creating a new resource.
+     *
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function import(Request $request)
+    public function import(Request $request): \Illuminate\Http\JsonResponse
     {
-        // https://techvblogs.com/blog/importing-large-csv-files-in-mysql-using-laravel
-        // https://laravel.com/docs/10.x/collections#lazy-collections
+        // Copy the CURL content in a csv file.
+        File::put('data_binary.csv', $request->getContent());
 
-        //Storage::disk('local')->put('test.csv', $request->getContent());
-
-
-//        File::put(time().'data_binary.csv', $request->getContent());
-//        dd(11);
-
-
+        // Load the content in a memory-safe state
         LazyCollection::make(function () {
 
-            $handle = fopen(public_path('1678874255data_binary.csv'), 'r');
+            $handle = fopen(public_path('data_binary.csv'), 'r');
 
             while (($line = fgetcsv($handle, 4096)) !== false) {
                 yield $line;
@@ -49,11 +51,6 @@ class EmployeeController extends APIController
 
                 $employees = $addresses = [];
                 foreach ($chunk as $index => $row) {
-
-//                    if (!\is_numeric($row[0])) {
-//                        logger('not int');
-//                        continue;
-//                    }
 
                     $employees[] = [
                         'id' => $index,
@@ -84,13 +81,18 @@ class EmployeeController extends APIController
                 DB::table('employees')->insert($employees);
                 DB::table('addresses')->insert($addresses);
             });
-        logger('done');
+        return response()->json([
+            'message' => 'Imported successfully.'
+        ], 201);
     }
 
     /**
      * Display the specified resource.
+     *
+     * @param string $id
+     * @return EmployeeResource|JsonResponse
      */
-    public function show(string $id)
+    public function show(string $id): EmployeeResource|\Illuminate\Http\JsonResponse
     {
         if (!$employee = Employee::query()->find((int) $id)) {
             return $this->responseWithError(404, 'Employee not found');
@@ -100,8 +102,11 @@ class EmployeeController extends APIController
 
     /**
      * Remove the specified resource from storage.
+     *
+     * @param string $id
+     * @return JsonResponse
      */
-    public function destroy(string $id)
+    public function destroy(string $id): \Illuminate\Http\JsonResponse
     {
         try {
             if (!$employee = Employee::query()->find((int) $id)) {
