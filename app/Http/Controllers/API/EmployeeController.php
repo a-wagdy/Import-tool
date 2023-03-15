@@ -7,6 +7,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\LazyCollection;
 use App\Http\Resources\EmployeeResource;
@@ -63,7 +64,7 @@ class EmployeeController extends APIController
                 $employees = $addresses = [];
                 foreach ($chunk as $index => $row) {
 
-                    $employees[] = [
+                    $employeeData = [
                         'id' => $index,
                         'employee_old_id' => $row[0],
                         'name_prefix' => $row[1],
@@ -80,7 +81,7 @@ class EmployeeController extends APIController
                         'phone_number' => Employee::setPhoneNumber($row[12]),
                         'username' => $row[18]
                     ];
-                    $addresses[] = [
+                    $addressData = [
                         'employee_id' => $index,
                         'place_name' => $row[13],
                         'country' => $row[14],
@@ -88,9 +89,20 @@ class EmployeeController extends APIController
                         'zip' => $row[16],
                         'region' => $row[17],
                     ];
+
+                    // Add the employee and address data to their respective arrays
+                    $employees[] = $employeeData;
+                    $addresses[] = $addressData;
                 }
-                DB::table('employees')->insert($employees);
-                DB::table('addresses')->insert($addresses);
+                // Use a database transaction to ensure atomicity of the inserts
+                DB::transaction(function () use ($employees, $addresses) {
+                    try {
+                        DB::table('employees')->insert($employees);
+                        DB::table('addresses')->insert($addresses);
+                    } catch (\Throwable $e) {
+                        Log::error('Error importing CSV data: ' . $e->getMessage());
+                    }
+                });
             });
         return response()->json([
             'message' => 'CSV data imported successfully'
