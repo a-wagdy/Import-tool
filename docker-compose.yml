@@ -26,6 +26,7 @@ services:
             SERVICE_TAGS: dev
             SERVICE_NAME: mysql
         volumes:
+            - ./docker-volumes/mysql-dump:/docker-entrypoint-initdb.d
             - ./docker-volumes/mysql:/var/lib/mysql
         networks:
             - import
