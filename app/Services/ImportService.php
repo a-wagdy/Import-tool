@@ -98,4 +98,25 @@ class ImportService
             'region' => $row[17],
         ];
     }
+
+    /**
+     * Prepare address data.
+     *
+     * @param $input_stream
+     * @return false|resource
+     */
+    public function createTempFileFromInput($input_stream)
+    {
+        // Create a temporary file
+        $temp = tmpfile();
+
+        // Write the CSV data to the temporary file
+        while (!feof($input_stream)) {
+            fwrite($temp, fread($input_stream, 8192));
+        }
+
+        fclose($input_stream);
+
+        return $temp;
+    }
 }

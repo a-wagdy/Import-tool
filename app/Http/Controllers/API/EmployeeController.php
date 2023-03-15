@@ -48,15 +48,8 @@ class EmployeeController extends APIController
             return $this->responseWithError(500, 'Failed to read input stream');
         }
 
-        // Create a temporary file
-        $temp = tmpfile();
-
-        // Write the CSV data to the temporary file
-        while (!feof($input_stream)) {
-            fwrite($temp, fread($input_stream, 8192));
-        }
-
-        fclose($input_stream);
+        // Create temp file from input stream
+        $temp = $this->importService->createTempFileFromInput($input_stream);
 
         // Insert CSV data into the database.
         $this->importService->processCsvData($temp);
