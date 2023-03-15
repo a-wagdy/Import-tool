@@ -5,11 +5,10 @@ namespace App\Http\Controllers\API;
 use App\Models\Employee;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\LazyCollection;
 use App\Http\Resources\EmployeeResource;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class EmployeeController extends APIController
 {
@@ -20,7 +19,7 @@ class EmployeeController extends APIController
      */
     public function list(): \Illuminate\Http\Resources\Json\AnonymousResourceCollection
     {
-        return EmployeeResource::collection(Employee::query()->paginate(15));
+        return EmployeeResource::collection(Employee::query()->paginate(25));
     }
 
     /**
@@ -31,19 +30,30 @@ class EmployeeController extends APIController
      */
     public function import(Request $request): \Illuminate\Http\JsonResponse
     {
-        // Copy the CURL content in a csv file.
-        File::put('data_binary.csv', $request->getContent());
+        if ($request->header('Content-Type') !== 'text/csv') {
+            return $this->responseWithError(400, 'Invalid file type');
+        }
+
+        // Get the raw CSV data from the request body
+        $csv_data = $request->getContent();
+
+        // Create a temporary file
+        $temp = tmpfile();
+
+        // Write the CSV data to the temporary file
+        fwrite($temp, $csv_data);
 
         // Load the content in a memory-safe state
-        LazyCollection::make(function () {
+        LazyCollection::make(function () use ($temp) {
 
-            $handle = fopen(public_path('data_binary.csv'), 'r');
+            $file = fopen(stream_get_meta_data($temp)['uri'], 'r'); // Open the temporary file for reading
 
-            while (($line = fgetcsv($handle, 4096)) !== false) {
-                yield $line;
+            while (($row = fgetcsv($file)) !== false) {
+                yield $row;
             }
 
-            fclose($handle);
+            fclose($file);
+            fclose($temp);
         })
             ->skip(1)
             ->chunk(300)
