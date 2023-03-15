@@ -3,18 +3,21 @@
 namespace App\Http\Controllers\API;
 
 use App\Models\Employee;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\LazyCollection;
+use App\Services\ImportService;
+use Illuminate\Http\JsonResponse;
 use App\Http\Resources\EmployeeResource;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class EmployeeController extends APIController
 {
+    private ImportService $importService;
+
+    public function __construct(ImportService $importService)
+    {
+        $this->importService = $importService;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -55,66 +58,9 @@ class EmployeeController extends APIController
 
         fclose($input_stream);
 
-        // Load the content in a memory-safe state
-        LazyCollection::make(function () use ($temp) {
+        // Insert CSV data into the database.
+        $this->importService->processCsvData($temp);
 
-            // Open the temporary file for reading
-            $file = fopen(stream_get_meta_data($temp)['uri'], 'r');
-
-            while (($row = fgetcsv($file)) !== false) {
-                yield $row;
-            }
-
-            fclose($file);
-            fclose($temp);
-        })
-            ->skip(1)
-            ->chunk(300)
-            ->each(function (LazyCollection $chunk) {
-
-                $employees = $addresses = [];
-                foreach ($chunk as $index => $row) {
-
-                    $employeeData = [
-                        'id' => $index,
-                        'employee_old_id' => $row[0],
-                        'name_prefix' => $row[1],
-                        'first_name' => $row[2],
-                        'middle_initial' => $row[3],
-                        'last_name' => $row[4],
-                        'gender' => Employee::setGenderAsInteger($row[5]),
-                        'email' => $row[6],
-                        'date_of_birth' => Employee::setDateAsValidDateTime($row[7]),
-                        'time_of_birth' => Employee::setDateAsValidDateTime($row[8]),
-                        'age' => $row[9],
-                        'date_of_joining' => Employee::setDateAsValidDateTime($row[10]),
-                        'age_in_company' => $row[11],
-                        'phone_number' => Employee::setPhoneNumber($row[12]),
-                        'username' => $row[18]
-                    ];
-                    $addressData = [
-                        'employee_id' => $index,
-                        'place_name' => $row[13],
-                        'country' => $row[14],
-                        'city' => $row[15],
-                        'zip' => $row[16],
-                        'region' => $row[17],
-                    ];
-
-                    // Add the employee and address data to their respective arrays
-                    $employees[] = $employeeData;
-                    $addresses[] = $addressData;
-                }
-                // Use a database transaction to ensure atomicity of the inserts
-                DB::transaction(function () use ($employees, $addresses) {
-                    try {
-                        DB::table('employees')->insert($employees);
-                        DB::table('addresses')->insert($addresses);
-                    } catch (\Throwable $e) {
-                        Log::error('Error importing CSV data: ' . $e->getMessage());
-                    }
-                });
-            });
         return response()->json(['message' => 'CSV data imported successfully'], 200);
     }
 
