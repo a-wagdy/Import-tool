@@ -1,22 +1,22 @@
 version: "3.7"
 services:
-    employee:
+    import:
         build:
             context: ./
             dockerfile: Dockerfile
-        image: employee
-        container_name: employee-app
+        image: import
+        container_name: import-app
         restart: unless-stopped
         working_dir: /var/www/
         volumes:
             - ./:/var/www
         networks:
-            - employee
+            - import
 
     db:
         image: mysql:8
         command: --max_allowed_packet=32505856
-        container_name: employee-db
+        container_name: import-db
         restart: unless-stopped
         ports:
             - "3400:3306"
@@ -28,20 +28,20 @@ services:
         volumes:
             - ./docker-volumes/mysql:/var/lib/mysql
         networks:
-            - employee
+            - import
 
     nginx:
         image: nginx:alpine
-        container_name: employee-nginx
+        container_name: import-nginx
         restart: unless-stopped
         ports:
-            - "9000:80"
+            - "8080:80"
         volumes:
             - ./:/var/www
             - ./docker-volumes/nginx:/etc/nginx/conf.d/
         networks:
-            - employee
+            - import
 
 networks:
-    employee:
+    import:
         driver: bridge
