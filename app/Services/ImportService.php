@@ -17,9 +17,7 @@ class ImportService
      */
     public function processCsvData($temp): void
     {
-        // Load the content in a memory-safe state
         LazyCollection::make(function () use ($temp) {
-
             // Open the temporary file for reading
             $file = fopen(stream_get_meta_data($temp)['uri'], 'r');
 
@@ -33,12 +31,12 @@ class ImportService
             ->skip(1)
             ->chunk(300)
             ->each(function (LazyCollection $chunk) {
-
                 $employees = $addresses = [];
                 foreach ($chunk as $index => $row) {
                     $employees[] = $this->prepareEmployeeData($index, $row);
                     $addresses[] = $this->prepareAddressData($index, $row);
                 }
+
                 // Use a database transaction to ensure atomicity of the inserts
                 DB::transaction(function () use ($employees, $addresses) {
                     try {
@@ -46,6 +44,7 @@ class ImportService
                         DB::table('addresses')->insert($addresses);
                     } catch (\Throwable $e) {
                         Log::error('Error importing CSV data: ' . $e->getMessage());
+                        throw $e;
                     }
                 });
             });
