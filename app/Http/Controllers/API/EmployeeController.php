@@ -5,7 +5,9 @@ namespace App\Http\Controllers\API;
 use App\Models\Employee;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\LazyCollection;
 use App\Http\Resources\EmployeeResource;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -25,6 +27,7 @@ class EmployeeController extends APIController
     /**
      * Show the form for creating a new resource.
      *
+     * @see https://laravel.com/docs/10.x/collections#lazy-collections
      * @param Request $request
      * @return JsonResponse
      */
@@ -34,19 +37,17 @@ class EmployeeController extends APIController
             return $this->responseWithError(400, 'Invalid file type');
         }
 
-        // Get the raw CSV data from the request body
-        $csv_data = $request->getContent();
-
         // Create a temporary file
         $temp = tmpfile();
 
         // Write the CSV data to the temporary file
-        fwrite($temp, $csv_data);
+        fwrite($temp, $request->getContent());
 
         // Load the content in a memory-safe state
         LazyCollection::make(function () use ($temp) {
 
-            $file = fopen(stream_get_meta_data($temp)['uri'], 'r'); // Open the temporary file for reading
+            // Open the temporary file for reading
+            $file = fopen(stream_get_meta_data($temp)['uri'], 'r');
 
             while (($row = fgetcsv($file)) !== false) {
                 yield $row;
@@ -92,8 +93,8 @@ class EmployeeController extends APIController
                 DB::table('addresses')->insert($addresses);
             });
         return response()->json([
-            'message' => 'Imported successfully.'
-        ], 201);
+            'message' => 'CSV data imported successfully'
+        ], 200);
     }
 
     /**
