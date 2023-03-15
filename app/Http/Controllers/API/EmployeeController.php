@@ -34,15 +34,26 @@ class EmployeeController extends APIController
      */
     public function import(Request $request): \Illuminate\Http\JsonResponse
     {
+        // Make sure the uploaded file in csv
         if ($request->header('Content-Type') !== 'text/csv') {
             return $this->responseWithError(400, 'Invalid file type');
+        }
+
+        // Read the raw CSV data from the input stream
+        $input_stream = fopen('php://input', 'r');
+        if ($input_stream === false) {
+            return $this->responseWithError(500, 'Failed to read input stream');
         }
 
         // Create a temporary file
         $temp = tmpfile();
 
         // Write the CSV data to the temporary file
-        fwrite($temp, $request->getContent());
+        while (!feof($input_stream)) {
+            fwrite($temp, fread($input_stream, 8192));
+        }
+
+        fclose($input_stream);
 
         // Load the content in a memory-safe state
         LazyCollection::make(function () use ($temp) {
@@ -104,9 +115,7 @@ class EmployeeController extends APIController
                     }
                 });
             });
-        return response()->json([
-            'message' => 'CSV data imported successfully'
-        ], 200);
+        return response()->json(['message' => 'CSV data imported successfully'], 200);
     }
 
     /**
