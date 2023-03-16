@@ -38,3 +38,9 @@ To make sure that the image is working, please open your browser and navigate to
 ## Delete employee
 
 - **[DELETE]**: http://127.0.0.1:8080/api/employee/{id}
+
+
+# DB structure
+
+<img width="662" alt="Screenshot 2023-03-16 at 12 57 18 PM" src="https://user-images.githubusercontent.com/64163189/225596757-3f55315f-5073-494a-86f5-a6b7a7eca39e.png">
+
