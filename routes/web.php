@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Address;
+use App\Models\Employee;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -12,26 +14,9 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
-use \App\Models\Employee;
+
 Route::get('/', function () {
-
-    dd(Employee::setDateAsValidDateTime('9/16/1992'));
-    dd(\App\Enums\Gender::M->value);
-
-    //\App\Models\Employee::factory()->count(5)->create();
-
-//    $employee = Employee::with('addresses')->find(6);
-//
-//    $employee->addresses()->create([
-//        'place_name' => 'fhfhhsad',
-//        'country' => 'Canada',
-//        'city' => 'Quebec',
-//        'region' => 'unknown',
-//        'zip' => 213123
-//    ]);
-//
-//    $employee->refresh();
-//    dd($employee->toArray());
-
-    return view('welcome');
+    echo 'The image is working!' , "<br>\n", "<br>\n";
+    echo 'The count of the employees in the DB: ' . Employee::query()->select('id')->count() , "<br>\n";
+    echo 'The count of the addresses in the DB: ' . Address::query()->select('id')->count();
 });
