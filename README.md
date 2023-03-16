@@ -12,9 +12,11 @@
 - If you're on Linux, install docker and docker compose.
 - If you're on Windows or Mac, make sure to have the docker desktop app up and running.
 
-1. Navigate to the app's directory, and build the image by running `docker-compose build`. This will take few mintues.
-2. Then run `docker-compose up -d`.
-3. `docker-compose exec import composer install`
+1. Clone: `git clone git@github.com:a-wagdy/lbx-2.git`.
+2. Navigate to the app's directory
+3. Build the image by running `docker-compose build`. This will take few mintues.
+4. Then run `docker-compose up -d`.
+5. `docker-compose exec import composer install`
 
 **By building the image, you should have the database automatically uploaded inside the container.**
 
