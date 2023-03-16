@@ -9,14 +9,14 @@
 
 # Installation
 
-- If you're on Windows or Mac, make sure to have the docker desktop app up and running.
 - If you're on Linux, install docker and docker compose.
+- If you're on Windows or Mac, make sure to have the docker desktop app up and running.
 
 1. Navigate to the app's directory, and build the image by running `docker-compose build`. This will take few mintues.
 2. Then run `docker-compose up -d`.
 3. `docker-compose exec import composer install`
 
-> By building the image, you should have the database automatically uploaded inside the container.
+**By building the image, you should have the database automatically uploaded inside the container.**
 
 To make sure that the image is working, please open your browser and navigate to `http://127.0.0.1:8080/`.
 
