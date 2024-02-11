@@ -1,4 +1,4 @@
-# Local Branx X Task
+# Import CSV file
 
 # Stack
 
@@ -12,9 +12,9 @@
 - If you're on Linux, install docker and docker compose.
 - If you're on Windows or Mac, make sure to have the docker desktop app up and running.
 
-1. Clone: `git clone git@github.com:a-wagdy/lbx-2.git`.
+1. Clone the repo.
 2. Navigate to the app's directory
-3. Build the image by running `docker-compose build`. This will take few mintues.
+3. Build the image by running `docker-compose build`. This will take a few minutes.
 4. Then run `docker-compose up -d`.
 5. `docker-compose exec import composer install`
 
@@ -24,10 +24,9 @@ To make sure that the image is working, please open your browser and navigate to
 
 # REST API
 
-## Import the CSV file
+## Import the CSV file using CURL
 
 - curl -X POST -H 'Content-Type: text/csv' --data-binary @import.csv http://127.0.0.1:8080/api/employee
-> Please mind the `--data-binary`.
 
 ## Get one employee
 
