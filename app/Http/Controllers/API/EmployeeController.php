@@ -48,6 +48,8 @@ class EmployeeController extends APIController
             return $this->responseWithError(500, 'Failed to read input stream');
         }
 
+        // ofcourse, more validation here is required, like the number of columns and the mapped data.
+
         // Create temp file from input stream
         $temp = $this->importService->createTempFileFromInput($input_stream);
 
