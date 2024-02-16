@@ -24,9 +24,11 @@ To make sure that the image is working, please open your browser and navigate to
 
 # REST API
 
-## Import the CSV file using CURL
+In this repo, you'll find the [Postman Collection](https://github.com/a-wagdy/Import-tool/blob/main/Import%20Tool.postman_collection.json), and the [CSV file](https://github.com/a-wagdy/Import-tool/blob/main/import.csv).
 
-- curl -X POST -H 'Content-Type: text/csv' --data-binary @import.csv http://127.0.0.1:8080/api/employee
+## Import the CSV file
+
+- **[POST]**: http://127.0.0.1:8080/api/import
 
 ## Get one employee
 
@@ -34,7 +36,7 @@ To make sure that the image is working, please open your browser and navigate to
 
 ## List all employees
 
-- **[GET]**: http://127.0.0.1:8080/api/employee
+- **[GET]**: http://127.0.0.1:8080/api/employees
 
 ## Delete employee
 
