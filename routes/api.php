@@ -14,7 +14,7 @@ use App\Http\Controllers\API\EmployeeController;
 |
 */
 
-Route::post('/employee', [EmployeeController::class, 'import']);
-Route::get('/employee', [EmployeeController::class, 'list']);
+Route::post('/import', [EmployeeController::class, 'import']);
+Route::get('/employees', [EmployeeController::class, 'list']);
 Route::get('/employee/{id}', [EmployeeController::class, 'show']);
 Route::delete('/employee/{id}', [EmployeeController::class, 'destroy']);
