@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\API;
 
 use App\Models\Employee;
@@ -11,11 +13,8 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class EmployeeController extends APIController
 {
-    private ImportService $importService;
-
-    public function __construct(ImportService $importService)
+    public function __construct(private readonly ImportService $importService)
     {
-        $this->importService = $importService;
     }
 
     /**
@@ -23,7 +22,7 @@ class EmployeeController extends APIController
      *
      * @return AnonymousResourceCollection
      */
-    public function list(): \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+    public function list(): AnonymousResourceCollection
     {
         return EmployeeResource::collection(Employee::query()->paginate(25));
     }
@@ -35,7 +34,7 @@ class EmployeeController extends APIController
      * @param Request $request
      * @return JsonResponse
      */
-    public function import(Request $request): \Illuminate\Http\JsonResponse
+    public function import(Request $request): JsonResponse
     {
         // Make sure the uploaded file in csv
         if ($request->header('Content-Type') !== 'text/csv') {
@@ -48,7 +47,7 @@ class EmployeeController extends APIController
             return $this->responseWithError(500, 'Failed to read input stream');
         }
 
-        // ofcourse, more validation here is required, like the number of columns and the mapped data.
+        // Surely, more validation here is required, like the number of columns and the mapped data.
 
         // Create temp file from input stream
         $temp = $this->importService->createTempFileFromInput($input_stream);
@@ -65,7 +64,7 @@ class EmployeeController extends APIController
      * @param string $id
      * @return EmployeeResource|JsonResponse
      */
-    public function show(string $id): EmployeeResource|\Illuminate\Http\JsonResponse
+    public function show(string $id): EmployeeResource|JsonResponse
     {
         if (!$employee = Employee::query()->find((int) $id)) {
             return $this->responseWithError(404, 'Employee not found');
@@ -79,12 +78,13 @@ class EmployeeController extends APIController
      * @param string $id
      * @return JsonResponse
      */
-    public function destroy(string $id): \Illuminate\Http\JsonResponse
+    public function destroy(string $id): JsonResponse
     {
         try {
             if (!$employee = Employee::query()->find((int) $id)) {
                 return $this->responseWithError(404, 'Employee not found');
             }
+
             $employee->delete();
 
             return response()->json([], 204);
