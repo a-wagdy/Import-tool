@@ -17,21 +17,24 @@ class ImportService
      * Insert CSV data into the database.
      *
      * @see https://laravel.com/docs/10.x/collections#lazy-collections
-     * @param UploadedFile $file
+     * @param string $filePath
      * @return void
      * @throws Throwable
      */
-    public function processCsvFile(UploadedFile $file): void
+    public function processCsvFile(string $filePath): void
     {
-        $splFileObject = $file->openFile();
+        if (!\is_file($filePath)) {
+            throw new \Exception("Path {$filePath} is not a real path");
+        }
 
-        LazyCollection::make(function () use ($splFileObject) {
-            while (($row = $splFileObject->fgetcsv()) !== false) {
+        $fileStream = fopen($filePath, 'r');
+
+        LazyCollection::make(function () use ($fileStream) {
+            while (($row = fgetcsv($fileStream)) !== false) {
                 yield $row;
             }
 
-            // Close the file handle
-            $splFileObject = null;
+            fclose($fileStream);
         })
             ->skip(1)
             ->chunk(300)
@@ -44,13 +47,8 @@ class ImportService
 
                 // Use a database transaction to ensure atomicity of the inserts
                 DB::transaction(function () use ($employees, $addresses) {
-                    try {
-                        DB::table('employees')->insert($employees);
-                        DB::table('addresses')->insert($addresses);
-                    } catch (Throwable $e) {
-                        Log::error('Error importing CSV data: ' . $e->getMessage());
-                        throw $e;
-                    }
+                    DB::table('employees')->insert($employees);
+                    DB::table('addresses')->insert($addresses);
                 });
             });
     }
