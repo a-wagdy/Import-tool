@@ -48,17 +48,11 @@ class EmployeeController extends APIController
             return $this->responseWithError(400, $validator->errors()->first());
         }
 
-        // Read the raw CSV data from the input stream
-        $input_stream = fopen('php://input', 'r');
-        if ($input_stream === false) {
-            return $this->responseWithError(500, 'Failed to read input stream');
-        }
-
-        // Create temp file from input stream
-        $temp = $this->importService->createTempFileFromInput($input_stream);
+        // Get validated data
+        $file = $validator->validated()['file'];
 
         // Insert CSV data into the database.
-        $this->importService->processCsvData($temp);
+        $this->importService->processCsvFile($file);
 
         return response()->json(['message' => 'CSV data imported successfully'], 200);
     }
