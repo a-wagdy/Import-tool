@@ -1,0 +1,62 @@
+{
+	"info": {
+		"_postman_id": "aa0dbe23-c2fe-48f3-a974-b5f38c9a9bc3",
+		"name": "Import Tool",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "9204176"
+	},
+	"item": [
+		{
+			"name": "[POST]: Import CSV",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "text/csv",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "Downloads/Import-tool/import.csv"
+						}
+					]
+				},
+				"url": "http://127.0.0.1:8080/api/employee"
+			},
+			"response": []
+		},
+		{
+			"name": "[GET]: Employees",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://127.0.0.1:8080/api/employee"
+			},
+			"response": []
+		},
+		{
+			"name": "[GET]: Employee",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://127.0.0.1:8080/api/employee/1"
+			},
+			"response": []
+		},
+		{
+			"name": "[DELETE]: Employee",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": "http://127.0.0.1:8080/api/employee/1"
+			},
+			"response": []
+		}
+	]
+}
