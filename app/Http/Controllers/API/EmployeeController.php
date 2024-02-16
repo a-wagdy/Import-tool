@@ -11,8 +11,8 @@ use App\Models\Employee;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Validator;
+use Log;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Throwable;
 use Illuminate\Support\Facades\Bus;
@@ -93,11 +93,13 @@ class EmployeeController extends APIController
                 return $this->responseWithError(404, 'Employee not found');
             }
 
+            $employee->addresses()->delete();
             $employee->delete();
 
-            return response()->json([], 204);
+            return response()->json(['Deleted successfully'], 204);
 
         } catch (Throwable $exception) {
+            Log::error('Error deleting a record: ' . $exception->getMessage());
             return $this->responseWithError(500, 'Something went wrong. Please, try again');
         }
     }
