@@ -16,6 +16,7 @@ class ImportService
      *
      * @param $temp
      * @return void
+     * @throws \Throwable
      */
     public function processCsvData($temp): void
     {
