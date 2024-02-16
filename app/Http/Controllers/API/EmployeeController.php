@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Resources\EmployeeResource;
 use App\Models\Employee;
-use Illuminate\Http\Request;
 use App\Services\ImportService;
 use Illuminate\Http\JsonResponse;
-use App\Http\Resources\EmployeeResource;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Validator;
+use Throwable;
 
 class EmployeeController extends APIController
 {
@@ -30,15 +32,20 @@ class EmployeeController extends APIController
     /**
      * Show the form for creating a new resource.
      *
-     * @see https://laravel.com/docs/10.x/collections#lazy-collections
      * @param Request $request
      * @return JsonResponse
+     * @throws Throwable
      */
     public function import(Request $request): JsonResponse
     {
-        // Make sure the uploaded file in csv
-        if ($request->header('Content-Type') !== 'text/csv') {
-            return $this->responseWithError(400, 'Invalid file type');
+        // Validate the request data
+        $validator = Validator::make($request->all(), [
+            'file' => 'required|file|mimes:csv|max:2048',
+        ]);
+
+        // Check if validation fails
+        if ($validator->fails()) {
+            return $this->responseWithError(400, $validator->errors()->first());
         }
 
         // Read the raw CSV data from the input stream
@@ -46,8 +53,6 @@ class EmployeeController extends APIController
         if ($input_stream === false) {
             return $this->responseWithError(500, 'Failed to read input stream');
         }
-
-        // Surely, more validation here is required, like the number of columns and the mapped data.
 
         // Create temp file from input stream
         $temp = $this->importService->createTempFileFromInput($input_stream);
@@ -89,7 +94,7 @@ class EmployeeController extends APIController
 
             return response()->json([], 204);
 
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
             return $this->responseWithError(500, 'Something went wrong. Please, try again');
         }
     }

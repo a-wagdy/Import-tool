@@ -8,15 +8,17 @@ use App\Models\Employee;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\LazyCollection;
+use Throwable;
 
 class ImportService
 {
     /**
      * Insert CSV data into the database.
      *
+     * @see https://laravel.com/docs/10.x/collections#lazy-collections
      * @param $temp
      * @return void
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function processCsvData($temp): void
     {
@@ -45,7 +47,7 @@ class ImportService
                     try {
                         DB::table('employees')->insert($employees);
                         DB::table('addresses')->insert($addresses);
-                    } catch (\Throwable $e) {
+                    } catch (Throwable $e) {
                         Log::error('Error importing CSV data: ' . $e->getMessage());
                         throw $e;
                     }
