@@ -5,14 +5,17 @@ declare(strict_types=1);
 namespace App\Http\Controllers\API;
 
 use App\Http\Resources\EmployeeResource;
+use App\Jobs\PostImportProcess;
 use App\Jobs\ProcessImportFile;
 use App\Models\Employee;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Throwable;
+use Illuminate\Support\Facades\Bus;
 
 class EmployeeController extends APIController
 {
@@ -54,7 +57,11 @@ class EmployeeController extends APIController
             return $this->responseWithError(400, 'Could not move the file');
         }
 
-        ProcessImportFile::dispatch($filePath);
+        // Dispatch jobs in order
+        Bus::chain([
+            new ProcessImportFile($filePath),
+            new PostImportProcess($filePath),
+        ])->dispatch();
 
         return response()->json(['message' => 'Importing the CSV file...'], 200);
     }
