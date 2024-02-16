@@ -5,20 +5,20 @@ declare(strict_types=1);
 namespace App\Http\Controllers\API;
 
 use App\Http\Resources\EmployeeResource;
+use App\Jobs\PostImportProcess;
+use App\Jobs\ProcessImportFile;
 use App\Models\Employee;
-use App\Services\ImportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Validator;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Throwable;
+use Illuminate\Support\Facades\Bus;
 
 class EmployeeController extends APIController
 {
-    public function __construct(private readonly ImportService $importService)
-    {
-    }
-
     /**
      * Display a listing of the resource.
      *
@@ -48,13 +48,22 @@ class EmployeeController extends APIController
             return $this->responseWithError(400, $validator->errors()->first());
         }
 
-        // Get validated data
+        /** @var UploadedFile $file */
         $file = $validator->validated()['file'];
 
-        // Insert CSV data into the database.
-        $this->importService->processCsvFile($file);
+        $file = $file->move(storage_path('/imports'), time() . '.csv');
 
-        return response()->json(['message' => 'CSV data imported successfully'], 200);
+        if (!$filePath = $file->getRealPath()) {
+            return $this->responseWithError(400, 'Could not move the file');
+        }
+
+        // Dispatch jobs in order
+        Bus::chain([
+            new ProcessImportFile($filePath),
+            new PostImportProcess($filePath),
+        ])->dispatch();
+
+        return response()->json(['message' => 'Importing the CSV file...'], 200);
     }
 
     /**

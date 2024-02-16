@@ -37,7 +37,7 @@ RUN apt-get clean all && rm -rf /var/lib/apt/lists/*
 RUN docker-php-ext-install pdo pdo_mysql mysqli mbstring exif pcntl bcmath gd intl zip soap bz2 calendar gettext gmp sockets opcache
 
 # Install redis & imagick & pcov
-RUN pecl install imagick pcov
+RUN pecl install redis imagick pcov
 
 # Enable extensions
 RUN docker-php-ext-enable pdo_mysql imagick pcov

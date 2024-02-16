@@ -17,21 +17,24 @@ class ImportService
      * Insert CSV data into the database.
      *
      * @see https://laravel.com/docs/10.x/collections#lazy-collections
-     * @param UploadedFile $file
+     * @param string $filePath
      * @return void
      * @throws Throwable
      */
-    public function processCsvFile(UploadedFile $file): void
+    public function processCsvFile(string $filePath): void
     {
-        $splFileObject = $file->openFile();
+        if (!\is_file($filePath)) {
+            throw new \Exception("Path {$filePath} is not a real path");
+        }
 
-        LazyCollection::make(function () use ($splFileObject) {
-            while (($row = $splFileObject->fgetcsv()) !== false) {
+        $fileStream = fopen($filePath, 'r');
+
+        LazyCollection::make(function () use ($fileStream) {
+            while (($row = fgetcsv($fileStream)) !== false) {
                 yield $row;
             }
 
-            // Close the file handle
-            $splFileObject = null;
+            fclose($fileStream);
         })
             ->skip(1)
             ->chunk(300)
@@ -44,13 +47,8 @@ class ImportService
 
                 // Use a database transaction to ensure atomicity of the inserts
                 DB::transaction(function () use ($employees, $addresses) {
-                    try {
-                        DB::table('employees')->insert($employees);
-                        DB::table('addresses')->insert($addresses);
-                    } catch (Throwable $e) {
-                        Log::error('Error importing CSV data: ' . $e->getMessage());
-                        throw $e;
-                    }
+                    DB::table('employees')->insert($employees);
+                    DB::table('addresses')->insert($addresses);
                 });
             });
     }
@@ -65,22 +63,24 @@ class ImportService
      */
     public function prepareEmployeeData(int $index, array $row): array
     {
+        $mapped = $this->getFileMappedData();
+
         return [
             'id' => $index,
-            'employee_old_id' => $row[0] ?? null,
-            'name_prefix' => $row[1] ?? null,
-            'first_name' => $row[2] ?? null,
-            'middle_initial' => $row[3] ?? null,
-            'last_name' => $row[4] ?? null,
-            'gender' => isset($row[5]) ? Employee::setGenderAsInteger($row[5]) : null,
-            'email' => $row[6] ?? null,
-            'date_of_birth' => isset($row[7]) ? Employee::setDateAsValidDateTime($row[7]) : null,
-            'time_of_birth' => isset($row[8]) ? Employee::setDateAsValidDateTime($row[8]) : null,
-            'age' => $row[9] ?? null,
-            'date_of_joining' => isset($row[10]) ? Employee::setDateAsValidDateTime($row[10]) : null,
-            'age_in_company' => $row[11] ?? null,
-            'phone_number' => isset($row[12]) ? Employee::setPhoneNumber($row[12]) : null,
-            'username' => $row[18] ?? null,
+            'employee_old_id' => $row[$mapped['employee_old_id']],
+            'name_prefix' => $row[$mapped['name_prefix']],
+            'first_name' => $row[$mapped['first_name']],
+            'middle_initial' => $row[$mapped['middle_initial']],
+            'last_name' => $row[$mapped['last_name']],
+            'gender' => Employee::setGenderAsInteger($row[$mapped['gender']]),
+            'email' => $row[$mapped['email']],
+            'date_of_birth' => Employee::setDateAsValidDateTime($row[$mapped['date_of_birth']]),
+            'time_of_birth' => Employee::setDateAsValidDateTime($row[$mapped['time_of_birth']]),
+            'age' => $row[$mapped['age']],
+            'date_of_joining' => Employee::setDateAsValidDateTime($row[$mapped['date_of_joining']]),
+            'age_in_company' => $row[$mapped['age_in_company']],
+            'phone_number' => Employee::setPhoneNumber($row[$mapped['phone_number']]),
+            'username' => $row[$mapped['username']],
         ];
     }
 
@@ -94,13 +94,45 @@ class ImportService
      */
     public function prepareAddressData(int $index, array $row): array
     {
+        $mapped = $this->getFileMappedData();
+
         return [
             'employee_id' => $index,
-            'place_name' => $row[13] ?? null,
-            'country' => $row[14] ?? null,
-            'city' => $row[15] ?? null,
-            'zip' => $row[16] ?? null,
-            'region' => $row[17] ?? null,
+            'place_name' => $row[$mapped['place_name']],
+            'country' => $row[$mapped['country']],
+            'city' => $row[$mapped['city']],
+            'zip' => $row[$mapped['zip']],
+            'region' => $row[$mapped['region']],
+        ];
+    }
+
+    /**
+     * Map the CSV file columns to its index number.
+     *
+     * @return array
+     */
+    public function getFileMappedData(): array
+    {
+        return [
+            'employee_old_id' => 0,
+            'name_prefix' => 1,
+            'first_name' => 2,
+            'middle_initial' => 3,
+            'last_name' => 4,
+            'gender' => 5,
+            'email' => 6,
+            'date_of_birth' => 7,
+            'time_of_birth' => 8,
+            'age' => 9,
+            'date_of_joining' => 10,
+            'age_in_company' => 11,
+            'phone_number' => 12,
+            'place_name' => 13,
+            'country' => 14,
+            'city' => 15,
+            'zip' => 16,
+            'region' => 17,
+            'username' => 18,
         ];
     }
 }
