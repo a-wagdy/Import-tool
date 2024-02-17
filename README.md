@@ -6,6 +6,7 @@
 - Laravel 10
 - MySQL 8
 - Nginx
+- Redis
 
 # Installation
 
@@ -29,6 +30,8 @@ In this repo, you'll find the [Postman Collection](https://github.com/a-wagdy/Im
 ## Import the CSV file
 
 - **[POST]**: http://127.0.0.1:8080/api/import
+
+  > Make sure to open the terminal and execute `docker-compose exec import php artisan queue:listen`
 
 ## Get one employee
 
