@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
-use App\Services\ImportService;
+use Log;
+use Throwable;
 use Illuminate\Bus\Queueable;
+use App\Services\Import\ImportService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Log;
-use Throwable;
 
 class ProcessImportFile implements ShouldQueue
 {
@@ -34,7 +34,7 @@ class ProcessImportFile implements ShouldQueue
     public function handle(): void
     {
         try {
-            $this->importService->processCsvFile($this->filePath);
+            $this->importService->processFile($this->filePath);
         } catch (Throwable $e) {
             Log::error('Error while importing the file: ' . $e->getMessage());
         }
