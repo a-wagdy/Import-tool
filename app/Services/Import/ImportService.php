@@ -2,16 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\Services;
+namespace App\Services\Import;
 
-use App\Models\Employee;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\LazyCollection;
 use Throwable;
+use App\Models\Employee;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\LazyCollection;
 
-class ImportService
+class ImportService implements ImportInterface
 {
     /**
      * Insert CSV data into the database.
@@ -21,7 +19,7 @@ class ImportService
      * @return void
      * @throws Throwable
      */
-    public function processCsvFile(string $filePath): void
+    public function processFile(string $filePath): void
     {
         if (!\is_file($filePath)) {
             throw new \Exception("Path {$filePath} is not a real path");

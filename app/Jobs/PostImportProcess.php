@@ -6,7 +6,7 @@ namespace App\Jobs;
 
 use App\Models\Address;
 use App\Models\Employee;
-use App\Services\ImportService;
+use App\Services\Import\ImportService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
